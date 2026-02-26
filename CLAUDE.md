@@ -131,39 +131,42 @@ node src/index.js connect
 
 Claude runs ALL commands automatically. User never types terminal commands.
 
-### Step 1: Install (Claude runs this)
+### Step 1: Install (Claude runs this silently)
 ```bash
 npm install
 ```
 
-### Step 2: Start Safe Mode (Claude runs this)
+### Step 2: Explain BEFORE running connect
+
+**IMPORTANT: Tell the user what to do BEFORE running the connect command:**
+
+Say this FIRST:
+```
+I'll start the connection. While it's waiting, please do these steps in Figma:
+
+1. Open Figma Desktop
+2. Go to: Plugins → Development → Import plugin from manifest
+3. Find the figma-cli folder, open "plugin", select "manifest.json"
+4. Then: Plugins → Development → FigCli
+
+Let me know when you see "Plugin connected" in the terminal!
+```
+
+### Step 3: THEN run connect (Claude runs this)
 ```bash
 node src/index.js connect --safe
 ```
 
-### Step 3: Guide user through Figma (one step at a time)
+### Step 4: When connected
 
-**Say:** "Open Figma Desktop and tell me when it's ready."
+When terminal shows "Plugin connected!", say:
+```
+Connected!
 
-**After user confirms, say:**
-"In Figma, go to **Plugins** menu (top bar) → **Development** → **Import plugin from manifest**"
+Next time just click: Plugins → Development → FigCli
 
-**After user confirms, say:**
-"Find the **figma-cli** folder, open the **plugin** folder inside, select **manifest.json** and click Open"
-
-**After user confirms, say:**
-"Now start the plugin: **Plugins** → **Development** → **FigCli**. A small window will appear."
-
-**When terminal shows "Plugin connected!", say:**
-"Connected!
-
-Next time you just need to click **Plugins → Development → FigCli** to reconnect.
-TIP: Right-click the plugin → 'Add to toolbar' for one-click access.
-
-What would you like to create? For example:
-- A button component
-- Tailwind colors
-- A card with image and text"
+What would you like to create?
+```
 
 ---
 
