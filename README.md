@@ -90,7 +90,7 @@ Done! Now just talk to Claude about your designs.
 
 Once connected, just talk to Claude:
 
-> "Create Tailwind colors"
+> "Add shadcn colors to my project"
 
 > "Add a card component"
 
@@ -243,7 +243,7 @@ Run Command Prompt or PowerShell as Administrator, then run `node src/index.js c
 
 ### Design Tokens & Variables
 
-- Create complete design systems (colors, spacing, typography, radii)
+- **Color presets** — shadcn (276 vars with Light/Dark mode), Radix UI (156 vars)
 - Create Tailwind CSS color palettes (all 22 color families, 50-950 shades)
 - Create and manage variable collections
 - **Variable modes** (Light/Dark/Mobile) with per-mode values
