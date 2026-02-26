@@ -88,23 +88,12 @@ node src/index.js bind fill "primary/500" -n "BUTTON_ID"
 
 ## IMPORTANT: Two Connection Modes
 
-### 🚀 Yolo Mode (Default) — Recommended for most users
-
-**What:** Patches Figma once to enable debug port, then connects directly via CDP.
-
-**Pros:** Fully automatic, faster, all features work
-**Cons:** Needs Full Disk Access on macOS (one-time), modifies Figma app
-
-```bash
-node src/index.js connect
-```
-
-### 🔒 Safe Mode — For secure environments
+### 🔒 Safe Mode (Recommended)
 
 **What:** Uses a Figma plugin for communication. No Figma modification.
 
-**Pros:** No patching, no Full Disk Access needed, works in corporate environments
-**Cons:** Manual plugin start each session, slightly slower
+**Pros:** No patching, no Full Disk Access needed, works everywhere
+**Cons:** Start plugin manually each session
 
 ```bash
 node src/index.js connect --safe
@@ -118,12 +107,23 @@ node src/index.js connect --safe
 1. **Plugins → Development → FigCli**
 2. Terminal shows "Plugin connected!"
 
-**Tip:** Add plugin to toolbar for one-click access.
+**Tip:** Right-click plugin → "Add to toolbar" for one-click access.
 
-### When to suggest Safe Mode
-- User gets "EPERM" or "permission" error during patching
-- User mentions corporate laptop or can't modify apps
-- User explicitly asks for no-patch solution
+### 🚀 Yolo Mode — Fully automatic
+
+**What:** Patches Figma once to enable debug port, then connects directly via CDP.
+
+**Pros:** Fully automatic, no manual steps after setup
+**Cons:** Needs Full Disk Access on macOS, modifies Figma app
+
+```bash
+node src/index.js connect
+```
+
+### When to suggest Yolo Mode
+- User wants zero manual steps
+- User has Full Disk Access granted
+- User is on personal Mac without restrictions
 
 ---
 
@@ -141,8 +141,8 @@ npm install
 Question: "Which connection mode do you want to use?"
 
 Options:
-1. **Yolo Mode (Recommended)** - Automatic, patches Figma once, needs Full Disk Access on Mac
-2. **Safe Mode** - No patching, works everywhere, requires manual plugin start
+1. **Safe Mode (Recommended)** - No patching, works everywhere, just start plugin in Figma
+2. **Yolo Mode** - Fully automatic, but patches Figma and needs Full Disk Access on Mac
 
 ### Step 3a: If user chooses Yolo Mode
 

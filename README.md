@@ -84,20 +84,20 @@ Help me install https://github.com/silships/figma-cli
 
 ### 3. Connect to Figma
 
-**Option A: Yolo Mode (Recommended for personal Mac)**
+**Option A: Safe Mode (Recommended)**
 ```
 Initiate project
 ```
-Done! Claude patches Figma once and connects automatically.
-
-**Option B: Safe Mode (For corporate/restricted environments)**
-```
-Connect to Figma in safe mode
-```
-Then in Figma:
+Choose "Safe Mode" when asked, then in Figma:
 1. **Plugins → Development → Import plugin from manifest**
 2. Select `plugin/manifest.json` from the cloned repo
 3. **Plugins → Development → FigCli** to start
+
+**Option B: Yolo Mode (Fully automatic, but patches Figma)**
+```
+Initiate project
+```
+Choose "Yolo Mode" when asked. Requires Full Disk Access on Mac.
 
 ---
 
@@ -119,44 +119,18 @@ The included `CLAUDE.md` teaches Claude all commands automatically. No manual re
 
 ## Two Connection Modes
 
-### 🚀 Yolo Mode (Default) — Recommended
-
-**What it does:** Patches Figma once to enable a debug port, then connects directly.
-
-**Pros:**
-- Fully automatic (no manual steps after setup)
-- Faster execution
-- Full feature support (render, JSX, everything)
-
-**Cons:**
-- Requires one-time Figma patch (needs Full Disk Access on macOS)
-- Modifies Figma app files
-
-```
-┌─────────────┐      WebSocket (CDP)      ┌─────────────┐
-│     CLI     │ ◄───────────────────────► │   Figma     │
-└─────────────┘      localhost:9222       └─────────────┘
-```
-
-```bash
-node src/index.js connect
-```
-
----
-
-### 🔒 Safe Mode — No Patching Required
+### 🔒 Safe Mode (Recommended)
 
 **What it does:** Uses a Figma plugin to communicate. No Figma modification needed.
 
 **Pros:**
 - No patching, no app modification
-- Works in corporate/secure environments
+- Works everywhere (corporate, personal, any environment)
 - No Full Disk Access needed
+- All features work
 
 **Cons:**
-- Manual plugin start required (each session)
-- Slightly slower
-- Some features limited (render uses eval fallback)
+- Start plugin manually each session (2 clicks)
 
 ```
 ┌─────────────┐     WebSocket     ┌─────────────┐     Plugin API     ┌─────────────┐
@@ -182,15 +156,40 @@ node src/index.js connect --safe
 
 ---
 
+### 🚀 Yolo Mode — Fully Automatic
+
+**What it does:** Patches Figma once to enable a debug port, then connects directly.
+
+**Pros:**
+- Fully automatic (no manual steps after setup)
+- Slightly faster execution
+
+**Cons:**
+- Requires one-time Figma patch
+- Needs Full Disk Access on macOS
+- Modifies Figma app files
+
+```
+┌─────────────┐      WebSocket (CDP)      ┌─────────────┐
+│     CLI     │ ◄───────────────────────► │   Figma     │
+└─────────────┘      localhost:9222       └─────────────┘
+```
+
+```bash
+node src/index.js connect
+```
+
+---
+
 ### Which Mode Should I Use?
 
 | Situation | Recommended Mode |
 |---|---|
-| Personal Mac, no restrictions | **Yolo Mode** |
-| Corporate laptop, can't modify apps | **Safe Mode** |
-| Full Disk Access permission error | **Safe Mode** |
-| Want zero manual steps | **Yolo Mode** |
-| Security-conscious environment | **Safe Mode** |
+| First time user | **Safe Mode** |
+| Corporate laptop | **Safe Mode** |
+| Personal Mac, want zero clicks | **Yolo Mode** |
+| Permission errors with Yolo | **Safe Mode** |
+| Any environment | **Safe Mode** |
 
 ---
 
