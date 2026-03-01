@@ -260,25 +260,33 @@ node src/index.js render '<Frame name="Card" w={320} h={200} bg="#18181b" rounde
 ```jsx
 // BAD: Text without w="fill" will be single line and clip
 <Frame flex="col" gap={8}>
-  <Text size={14} color="#a1a1aa">Long text that will be cut off...</Text>
+  <Text size={16} weight="semibold" color="#fff">Title cut off</Text>
+  <Text size={14} color="#a1a1aa">Description also cut off...</Text>
 </Frame>
 
-// GOOD: Add w="fill" to BOTH parent Frame AND Text element
+// GOOD: Add w="fill" to parent Frame AND ALL Text elements
 <Frame flex="col" gap={8} w="fill">
-  <Text size={14} color="#a1a1aa" w="fill">Long text that will wrap properly within the container width.</Text>
+  <Text size={16} weight="semibold" color="#fff" w="fill">Title wraps properly</Text>
+  <Text size={14} color="#a1a1aa" w="fill">Description wraps properly.</Text>
 </Frame>
 ```
 **Rule:** For text to wrap, you need:
 1. Parent frame with `w="fill"` or fixed width
-2. Text element with `w="fill"`
+2. **EVERY** Text element needs `w="fill"` (not just descriptions!)
 3. Parent must have `flex="col"` or `flex="row"`
 
-**Real example - card with description:**
+**IMPORTANT:** ALL text that could wrap needs `w="fill"`:
+- Titles (e.g., "Wireless Noise-Canceling Headphones")
+- Descriptions
+- Labels
+- Any multi-word text
+
+**Real example - card with title AND description:**
 ```jsx
 <Frame name="Card" w={340} bg="#18181b" rounded={16} flex="col" p={20} gap={16}>
   <Frame flex="col" gap={8} w="fill">
-    <Text size={16} weight="semibold" color="#fff">Title</Text>
-    <Text size={14} color="#a1a1aa" w="fill">This is a longer description that will properly wrap to multiple lines because both the parent and text have w="fill".</Text>
+    <Text size={16} weight="semibold" color="#fff" w="fill">Wireless Noise-Canceling Headphones</Text>
+    <Text size={14} color="#a1a1aa" w="fill">Premium audio experience with 40-hour battery life.</Text>
   </Frame>
 </Frame>
 ```
