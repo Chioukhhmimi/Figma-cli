@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# fig-start — Launch Figma CLI + Claude Code
-# Connects to Figma, lets you pick an open file, then launches Claude Code.
-#
+# fig-start — Launch Figma CLI + AI Agent (Gemini, Claude, Qwen Code)
+# Connects to Figma, lets you pick an open file, then launches your AI agent.
 # Usage:
-#   fig-start          → Yolo Mode (default) with file selector
-#   fig-start --safe   → Safe Mode (plugin-based, no patching)
-#   fig-start --here   → Stay in current directory (don't cd to repo)
-#   fig-start --setup  → set/change the figma-cli repo path
+#   fig-start              → Yolo Mode (default) with file selector
+#   fig-start --safe       → Safe Mode (plugin-based, no patching)
+#   fig-start --here       → Stay in current directory (don't cd to repo)
+#   fig-start --agent NAME → Select agent (gemini, claude, qwencode)
+#   fig-start --setup      → set/change the figma-cli repo path
 
 CONFIG_DIR="$HOME/.figma-cli"
 CONFIG_FILE="$CONFIG_DIR/config.json"
@@ -45,6 +45,120 @@ if os.path.exists(path):
 cfg['repoPath'] = '$1'
 with open(path, 'w') as f: json.dump(cfg, f, indent=2)
 "
+}
+
+get_default_agent() {
+    if [ -f "$CONFIG_FILE" ]; then
+        python3 -c "import json; print(json.load(open('$CONFIG_FILE')).get('defaultAgent','gemini'))" 2>/dev/null
+    else
+        echo "gemini"
+    fi
+}
+
+save_default_agent() {
+    mkdir -p "$CONFIG_DIR"
+    python3 -c "
+import json, os
+path = '$CONFIG_FILE'
+cfg = {}
+if os.path.exists(path):
+    with open(path) as f: cfg = json.load(f)
+cfg['defaultAgent'] = '$1'
+with open(path, 'w') as f: json.dump(cfg, f, indent=2)
+"
+}
+
+normalize_agent() {
+    case "$1" in
+        qwini|qwen|qwen-code)
+            printf 'qwencode'
+            ;;
+        *)
+            printf '%s' "$1"
+            ;;
+    esac
+}
+
+resolve_agent_command() {
+    local agent
+    agent=$(normalize_agent "$1")
+    case "$agent" in
+        qwencode)
+            printf 'qwen'
+            ;;
+        *)
+            printf '%s' "$agent"
+            ;;
+    esac
+}
+
+resolve_agent_executable() {
+    local cmd
+    cmd=$(resolve_agent_command "$1")
+
+    if command -v "$cmd" >/dev/null 2>&1; then
+        command -v "$cmd"
+        return
+    fi
+
+    local npm_bin
+    npm_bin=$(npm bin -g 2>/dev/null)
+    if [ -n "$npm_bin" ]; then
+        for ext in "" ".cmd" ".exe"; do
+            if [ -x "$npm_bin/$cmd$ext" ]; then
+                printf '%s' "$npm_bin/$cmd$ext"
+                return
+            fi
+        done
+    fi
+
+    printf '%s' "$cmd"
+}
+
+resolve_npm_package() {
+    local agent
+    agent=$(normalize_agent "$1")
+    case "$agent" in
+        gemini)
+            printf '@google/generative-ai'
+            ;;
+        claude)
+            printf '@anthropic-ai/sdk'
+            ;;
+        qwencode)
+            printf '@qwen-code/qwen-code'
+            ;;
+        *)
+            printf ''
+            ;;
+    esac
+}
+
+check_agent_installed() {
+    local package
+    package=$(resolve_npm_package "$1")
+    if [ -n "$package" ] && npm list -g "$package" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    local executable
+    executable=$(resolve_agent_executable "$1")
+    if [ -x "$executable" ] || command -v "$executable" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    return 1
+}
+
+get_available_agents() {
+    local agents=("gemini" "claude" "qwencode")
+    local available=()
+    for agent in "${agents[@]}"; do
+        if check_agent_installed "$agent"; then
+            available+=("$agent")
+        fi
+    done
+    printf '%s\n' "${available[@]}"
 }
 
 # ── Arrow-key selector (same UX as fancoolo-start) ──
@@ -114,15 +228,41 @@ select_file() {
 # Handle flags
 SAFE_MODE=false
 STAY_HERE=false
+AGENT_OVERRIDE=""
+SETUP_MODE=false
 
-for arg in "$@"; do
-    case "$arg" in
-        --safe) SAFE_MODE=true ;;
-        --here) STAY_HERE=true ;;
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --safe)
+            SAFE_MODE=true
+            shift
+            ;;
+        --here)
+            STAY_HERE=true
+            shift
+            ;;
+        --setup)
+            SETUP_MODE=true
+            shift
+            ;;
+        --agent)
+            shift
+            if [ $# -gt 0 ]; then
+                AGENT_OVERRIDE="$1"
+                shift
+            fi
+            ;;
+        --agent=*)
+            AGENT_OVERRIDE="${1#*=}"
+            shift
+            ;;
+        *)
+            shift
+            ;;
     esac
 done
 
-if [ "$1" = "--setup" ]; then
+if [ "$SETUP_MODE" = true ]; then
     printf "${BOLD}Enter the path to your figma-cli repo:${NC} "
     read -r repo_path < /dev/tty
     repo_path="${repo_path/#\~/$HOME}"
@@ -167,6 +307,44 @@ else
 fi
 echo ""
 
+# Resolve agent to use
+if [ -n "$AGENT_OVERRIDE" ]; then
+    AGENT=$(normalize_agent "$AGENT_OVERRIDE")
+else
+    AGENT=$(normalize_agent "$(get_default_agent)")
+fi
+
+# Verify agent is available
+if ! check_agent_installed "$AGENT"; then
+    AVAILABLE=($(get_available_agents))
+    if [ ${#AVAILABLE[@]} -eq 0 ]; then
+        echo -e "${RED}✗ No AI agents installed.${NC}"
+        echo ""
+        echo "Install one:"
+        echo "  • Gemini:  npm install -g @google/generative-ai"
+        echo "  • Claude:  npm install -g @anthropic-ai/sdk"
+        echo "  • Qwencode: npm install -g @qwen-code/qwen-code"
+        echo ""
+        exit 1
+    elif [ ${#AVAILABLE[@]} -eq 1 ]; then
+        AGENT="${AVAILABLE[0]}"
+        echo -e "${YELLOW}⚠ ${NC}${AGENT} not available, falling back to: ${AGENT}"
+    else
+        echo -e "${YELLOW}⚠ Configured agent '${AGENT}' not available.${NC}"
+        echo "Available: ${AVAILABLE[@]}"
+        echo ""
+        PS3="Select an agent: "
+        select AGENT in "${AVAILABLE[@]}"; do
+            if [ -n "$AGENT" ]; then
+                save_default_agent "$AGENT"
+                break
+            fi
+        done
+    fi
+fi
+
+echo -e "  ${GREEN}Using agent: ${AGENT}${NC}"
+
 # Step 1: Check if Figma is running, start if not
 if ! pgrep -x "Figma" > /dev/null 2>&1; then
     echo -e "  ${YELLOW}Starting Figma...${NC}"
@@ -188,12 +366,10 @@ if [ "$SAFE_MODE" = true ]; then
     echo ""
 
     # Skip file selector (Safe Mode only sees the active file via plugin)
-    echo -e "  ${GREEN}Launching Claude Code...${NC}"
+    echo -e "  ${GREEN}Launching ${AGENT}...${NC}"
     echo ""
-    if [ "$STAY_HERE" = false ]; then
-        cd "$REPO_PATH" || exit 1
-    fi
-    exec claude
+    # Launch through Node.js which handles cross-platform path resolution
+    exec node "$CLI" launch-agent "$AGENT"
 else
     # ── Yolo Mode: CDP-based connection ──
     # Check if CDP is already accessible (avoid killing/restarting Figma)
@@ -259,15 +435,11 @@ for f in files:
     if [ ${#FILE_TITLES[@]} -eq 0 ]; then
         echo -e "  ${YELLOW}No Figma files detected.${NC} Open a file in Figma first."
         echo ""
-        echo -e "  Launching Claude Code anyway..."
+        echo -e "  Launching ${AGENT}...${NC}"
         echo ""
-        if [ "$STAY_HERE" = false ]; then
-            cd "$REPO_PATH" || exit 1
-        fi
-        exec claude
+        # Launch through Node.js which handles cross-platform path resolution
+        exec node "$CLI" launch-agent "$AGENT"
     fi
-
-    SELECTED_TITLE=""
 
     echo ""
     SELECTED_TITLE=$(select_file "${FILE_TITLES[@]}")
@@ -279,11 +451,9 @@ for f in files:
     echo -e "  ${GREEN}✓ File: ${BOLD}${SELECTED_TITLE}${NC}"
     echo ""
 
-    # Step 4: Launch Claude Code
-    echo -e "  ${GREEN}Launching Claude Code...${NC}"
+    # Step 4: Launch AI Agent
+    echo -e "  ${GREEN}Launching ${AGENT}...${NC}"    
     echo ""
-    if [ "$STAY_HERE" = false ]; then
-        cd "$REPO_PATH" || exit 1
-    fi
-    exec claude
+    # Launch through Node.js which handles cross-platform path resolution
+    exec node "$CLI" launch-agent "$AGENT"
 fi

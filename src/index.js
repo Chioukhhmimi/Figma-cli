@@ -16,6 +16,8 @@ import { FigmaClient } from './figma-client.js';
 import { isPatched, patchFigma, unpatchFigma, getFigmaCommand, getCdpPort, getFigmaBinaryPath } from './figma-patch.js';
 import { listComponents, getComponent, getAllComponents, VISUAL_COMPONENTS } from './shadcn.js';
 import { listBlocks, getBlock } from './blocks/index.js';
+import { getAvailableAgents, SUPPORTED_AGENTS, launchAgent, isAgentAvailable, normalizeAgentName } from './agent-manager.js';
+import { getConfig, setConfig, getDefaultAgent, setDefaultAgent } from './config.js';
 
 // Fix zsh shell escaping: zsh escapes ! to \! even in single quotes
 function unescapeShell(str) {
@@ -869,7 +871,7 @@ program.action(async () => {
 });
 
 function showQuickStart() {
-  console.log(chalk.white('  Just ask Claude:\n'));
+  console.log(chalk.white('  Just ask Gemini:\n'));  
   console.log(chalk.white('    "Add shadcn colors to my project"'));
   console.log(chalk.white('    "Create a blue card with rounded corners"'));
   console.log(chalk.white('    "Show me what\'s on the canvas"'));
@@ -982,7 +984,7 @@ program
     // Done!
     console.log(chalk.green('\n  ✓ Setup complete!\n'));
 
-    console.log(chalk.white('  Just ask Claude:\n'));
+    console.log(chalk.white('  Just ask Gemini:\n'));    
     console.log(chalk.white('    "Add shadcn colors to my project"'));
     console.log(chalk.white('    "Create a blue card with rounded corners"'));
     console.log(chalk.white('    "Show me what\'s on the canvas"'));
@@ -7533,6 +7535,99 @@ blocksCmd
       spinner.succeed(`Created ${block.name} (${nodeId})`);
     } catch (e) {
       spinner.fail(`Failed to create ${block.name}: ${e.message}`);
+    }
+  });
+
+// ============ AGENT MANAGEMENT ============
+
+const agentCmd = program
+  .command('agent')
+  .description('Manage AI agent selection (gemini, claude, qwencode)');
+
+agentCmd
+  .command('set <name>')
+  .description('Set default AI agent')
+  .action((name) => {
+    const normalized = normalizeAgentName(name);
+    if (!SUPPORTED_AGENTS.includes(normalized)) {
+      console.log(chalk.red(`✗ Unknown agent: ${name}`));
+      console.log(chalk.gray(`  Supported: ${SUPPORTED_AGENTS.join(', ')}`));
+      return;
+    }
+
+    if (!isAgentAvailable(normalized)) {
+      console.log(chalk.red(`✗ Agent not installed: ${name}`));
+      console.log(chalk.gray(`  Install it first, then try again.`));
+      return;
+    }
+
+    setDefaultAgent(normalized);
+    console.log(chalk.green(`✓ Default agent set to: ${chalk.bold(normalized)}`));
+  });
+
+agentCmd
+  .command('current')
+  .description('Show current default agent')
+  .action(() => {
+    const current = normalizeAgentName(getDefaultAgent());
+    const available = getAvailableAgents();
+
+    console.log(chalk.bold('\nAgent Status\n'));
+    console.log(`  Current: ${chalk.cyan(current)}`);
+    console.log(`  Available: ${available.length > 0 ? available.join(', ') : chalk.yellow('none installed')}`);
+    console.log();
+
+    if (available.length === 0) {
+      console.log(chalk.yellow('  ⚠ No agents installed. Install one with:'));
+      console.log(chalk.gray('    • npm install -g @google/generative-ai'));
+      console.log(chalk.gray('    • npm install -g @anthropic-ai/sdk'));
+      console.log();
+    }
+  });
+
+agentCmd
+  .command('list')
+  .description('List all supported agents')
+  .action(() => {
+    const available = getAvailableAgents();
+    console.log(chalk.bold('\nSupported Agents\n'));
+
+    for (const agent of SUPPORTED_AGENTS) {
+      const installed = available.includes(agent) ? chalk.green('✓') : chalk.red('✗');
+      console.log(`  ${installed} ${chalk.cyan(agent)}`);
+    }
+    console.log();
+  });
+
+// ============ LAUNCHER HELPER ============
+
+// Helper for bin/fig-start to launch an agent with proper setup
+program
+  .command('launch-agent <agent>')
+  .description('[Internal] Launch an AI agent (used by fig-start)')
+  .option('--safe', 'Connect in safe mode first')
+  .action(async (agent, options) => {
+    const normalized = normalizeAgentName(agent);
+    if (!SUPPORTED_AGENTS.includes(normalized)) {
+      console.log(chalk.red(`✗ Invalid agent: ${agent}`));
+      process.exit(1);
+    }
+
+    if (!isAgentAvailable(normalized)) {
+      console.log(chalk.red(`✗ Agent not installed: ${agent}`));
+      process.exit(1);
+    }
+
+    // If user specified --safe, we should have already connected
+    // The agent launcher just needs to exec the agent now
+    try {
+      launchAgent(normalized, {
+        stdio: 'inherit',
+        cwd: process.cwd()
+      });
+    } catch (e) {
+      console.log(chalk.red(`✗ Failed to launch ${agent}: ${e.message}`));
+      process.exit(1);
     }
   });
 

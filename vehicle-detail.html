@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehicle Detail — AB-123-CD</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f7f7f8;
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .page {
+      width: 1280px;
+      background: #ffffff;
+      display: flex;
+      min-height: 900px;
+      box-shadow: 0 1px 3px rgba(9,9,11,0.06), 0 1px 2px rgba(9,9,11,0.04);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: #23272f;
+      padding: 24px 12px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-logo {
+      color: #ffffff;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 32px;
+      padding: 0 8px;
+    }
+
+    .nav-section {
+      margin-bottom: 24px;
+    }
+
+    .nav-section-label {
+      color: #4f5259;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0 8px;
+      margin-bottom: 8px;
+    }
+
+    .nav-item {
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-bottom: 4px;
+      transition: background 0.15s;
+    }
+
+    .nav-item:hover {
+      background: #1c1f26;
+    }
+
+    .nav-item.selected {
+      background: #ffffff;
+      color: #09090b;
+    }
+
+    .nav-icon {
+      display: inline-block;
+      width: 20px;
+      margin-right: 8px;
+      text-align: center;
+    }
+
+    /* Main Content */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Bar */
+    .top-bar {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      border-bottom: 1px solid #efeff0;
+    }
+
+    .breadcrumb {
+      font-size: 14px;
+      color: #626265;
+      font-weight: 400;
+    }
+
+    .breadcrumb span {
+      margin: 0 4px;
+    }
+
+    .breadcrumb .current {
+      color: #09090b;
+      font-weight: 600;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      height: 36px;
+      padding: 0 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s;
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: #09090b;
+      border: 1px solid #afafb1;
+    }
+
+    .btn-secondary:hover {
+      background: #f7f7f8;
+    }
+
+    .btn-primary {
+      background: #0f82ea;
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: #0c68bb;
+    }
+
+    /* Content Scroll Area */
+    .content-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px;
+    }
+
+    /* Hero Card */
+    .hero-card {
+      display: flex;
+      gap: 24px;
+      background: #ffffff;
+      border: 1px solid #efeff0;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(9,9,11,0.06), 0 1px 2px rgba(9,9,11,0.04);
+    }
+
+    .hero-image {
+      width: 200px;
+      height: 140px;
+      background: #f7f7f8;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #626265;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .hero-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .hero-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .plate-badge {
+      background: #f7f7f8;
+      border: 1px solid #efeff0;
+      border-radius: 9999px;
+      padding: 4px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #09090b;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .status-badge {
+      background: #d9f3e3;
+      color: #349a5d;
+      border: 1px solid #8ddaac;
+      border-radius: 9999px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .vehicle-name {
+      font-size: 24px;
+      font-weight: 600;
+      color: #09090b;
+      letter-spacing: -0.5px;
+    }
+
+    .vehicle-meta {
+      display: flex;
+      gap: 24px;
+      font-size: 14px;
+      color: #626265;
+    }
+
+    .vehicle-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .meta-label {
+      color: #626265;
+    }
+
+    .meta-value {
+      color: #09090b;
+      font-weight: 600;
+    }
+
+    .service-link {
+      color: #0f82ea;
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+    }
+
+    .service-link:hover {
+      text-decoration: underline;
+    }
+
+    /* KPI Row */
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .kpi-card {
+      background: #ffffff;
+      border: 1px solid #efeff0;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(9,9,11,0.06), 0 1px 2px rgba(9,9,11,0.04);
+      position: relative;
+    }
+
+    .kpi-label {
+      font-size: 14px;
+      color: #626265;
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 32px;
+      font-weight: 600;
+      color: #09090b;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kpi-trend {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 9999px;
+    }
+
+    .trend-up {
+      background: #d9f3e3;
+      color: #349a5d;
+    }
+
+    .trend-down {
+      background: #fcdada;
+      color: #bf3636;
+    }
+
+    .trend-neutral {
+      background: #f7f7f8;
+      color: #626265;
+    }
+
+    /* Bottom Section */
+    .bottom-section {
+      display: grid;
+      grid-template-columns: 65% 35%;
+      gap: 16px;
+    }
+
+    /* Table Card */
+    .card {
+      background: #ffffff;
+      border: 1px solid #efeff0;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(9,9,11,0.06), 0 1px 2px rgba(9,9,11,0.04);
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 16px 24px;
+      border-bottom: 1px solid #efeff0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #09090b;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: #f7f7f8;
+      font-size: 12px;
+      font-weight: 600;
+      color: #626265;
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid #efeff0;
+    }
+
+    td {
+      font-size: 14px;
+      color: #09090b;
+      padding: 10px 12px;
+      border-bottom: 1px solid #efeff0;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    tr:hover td {
+      background: #f7f7f8;
+    }
+
+    .tabular {
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .status-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-completed {
+      background: #d9f3e3;
+      color: #349a5d;
+    }
+
+    .status-active {
+      background: #cfe6fb;
+      color: #0c68bb;
+    }
+
+    .status-pending {
+      background: #ffe6cc;
+      color: #cc6600;
+    }
+
+    /* Maintenance Timeline */
+    .timeline {
+      padding: 24px;
+    }
+
+    .timeline-item {
+      display: flex;
+      gap: 16px;
+      padding-bottom: 20px;
+      position: relative;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-item:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 20px;
+      bottom: 0;
+      width: 1px;
+      background: #efeff0;
+    }
+
+    .timeline-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 9999px;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .dot-green {
+      background: #349a5d;
+    }
+
+    .dot-blue {
+      background: #0f82ea;
+    }
+
+    .dot-orange {
+      background: #ff8000;
+    }
+
+    .dot-red {
+      background: #ef4444;
+    }
+
+    .timeline-content {
+      flex: 1;
+    }
+
+    .timeline-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #09090b;
+      margin-bottom: 4px;
+    }
+
+    .timeline-date {
+      font-size: 12px;
+      color: #626265;
+      margin-bottom: 4px;
+    }
+
+    .timeline-status {
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">DadyCar</div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">Main</div>
+        <div class="nav-item">
+          <span class="nav-icon">◧</span>Dashboard
+        </div>
+        <div class="nav-item selected">
+          <span class="nav-icon">◈</span>Vehicles
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">◉</span>Drivers
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">▤</span>Trips
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">Management</div>
+        <div class="nav-item">
+          <span class="nav-icon">⚙</span>Maintenance
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">◫</span>Fuel
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">◪</span>Incidents
+        </div>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-label">System</div>
+        <div class="nav-item">
+          <span class="nav-icon">◐</span>Reports
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">◑</span>Settings
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="content">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <nav class="breadcrumb">
+          Fleet<span>›</span>Vehicles<span>›</span><span class="current">AB-123-CD</span>
+        </nav>
+        <div class="top-actions">
+          <button class="btn btn-secondary">Edit Vehicle</button>
+          <button class="btn btn-primary">Assign Driver</button>
+        </div>
+      </header>
+
+      <!-- Scrollable Content -->
+      <div class="content-scroll">
+        <!-- Hero Card -->
+        <section class="hero-card">
+          <div class="hero-image">Vehicle Image</div>
+          <div class="hero-details">
+            <div class="hero-header">
+              <span class="plate-badge">AB-123-CD</span>
+              <span class="status-badge">Active</span>
+            </div>
+            <h1 class="vehicle-name">Renault Clio 2022</h1>
+            <div class="vehicle-meta">
+              <span>
+                <span class="meta-label">Mileage</span>
+                <span class="meta-value">87,432 km</span>
+              </span>
+              <span>
+                <span class="meta-label">Next Service</span>
+                <a href="#" class="service-link">15 May 2026</a>
+              </span>
+              <span>
+                <span class="meta-label">Fuel Type</span>
+                <span class="meta-value">Diesel</span>
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <!-- KPI Row -->
+        <section class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-label">Distance (30d)</div>
+            <div class="kpi-value">3,842</div>
+            <div class="kpi-label">km</div>
+            <span class="kpi-trend trend-up">↑ 12%</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Fuel (30d)</div>
+            <div class="kpi-value">312</div>
+            <div class="kpi-label">liters</div>
+            <span class="kpi-trend trend-down">↓ 5%</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Active Days</div>
+            <div class="kpi-value">18</div>
+            <div class="kpi-label">this month</div>
+            <span class="kpi-trend trend-neutral">— 0%</span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Incidents</div>
+            <div class="kpi-value">0</div>
+            <div class="kpi-label">last 90 days</div>
+            <span class="kpi-trend trend-up">✓ Clear</span>
+          </div>
+        </section>
+
+        <!-- Bottom Section -->
+        <section class="bottom-section">
+          <!-- Trip History Table -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Trip History</h2>
+              <button class="btn btn-secondary" style="height: 32px; font-size: 12px;">View All</button>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Driver</th>
+                    <th>Origin</th>
+                    <th>Destination</th>
+                    <th style="text-align: right;">Distance</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>12 Apr 2026</td>
+                    <td>Marco Silva</td>
+                    <td>Lisbon HQ</td>
+                    <td>Porto Office</td>
+                    <td class="tabular">314 km</td>
+                    <td><span class="status-pill status-completed">Completed</span></td>
+                  </tr>
+                  <tr>
+                    <td>10 Apr 2026</td>
+                    <td>Ana Costa</td>
+                    <td>Porto Office</td>
+                    <td>Braga Depot</td>
+                    <td class="tabular">56 km</td>
+                    <td><span class="status-pill status-completed">Completed</span></td>
+                  </tr>
+                  <tr>
+                    <td>08 Apr 2026</td>
+                    <td>Marco Silva</td>
+                    <td>Lisbon HQ</td>
+                    <td>Setúbal Warehouse</td>
+                    <td class="tabular">48 km</td>
+                    <td><span class="status-pill status-completed">Completed</span></td>
+                  </tr>
+                  <tr>
+                    <td>05 Apr 2026</td>
+                    <td>Pedro Santos</td>
+                    <td>Faro Airport</td>
+                    <td>Lisbon HQ</td>
+                    <td class="tabular">280 km</td>
+                    <td><span class="status-pill status-active">In Transit</span></td>
+                  </tr>
+                  <tr>
+                    <td>03 Apr 2026</td>
+                    <td>Ana Costa</td>
+                    <td>Lisbon HQ</td>
+                    <td>Sintra Client</td>
+                    <td class="tabular">32 km</td>
+                    <td><span class="status-pill status-pending">Pending</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Maintenance Timeline -->
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Maintenance</h2>
+            </div>
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-dot dot-green"></div>
+                <div class="timeline-content">
+                  <div class="timeline-date">28 Mar 2026</div>
+                  <div class="timeline-title">Oil Change</div>
+                  <span class="timeline-status status-pill status-completed">Completed</span>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot dot-blue"></div>
+                <div class="timeline-content">
+                  <div class="timeline-date">15 Feb 2026</div>
+                  <div class="timeline-title">Tire Rotation</div>
+                  <span class="timeline-status status-pill status-completed">Completed</span>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot dot-orange"></div>
+                <div class="timeline-content">
+                  <div class="timeline-date">15 May 2026</div>
+                  <div class="timeline-title">Brake Inspection</div>
+                  <span class="timeline-status status-pill status-pending">Scheduled</span>
+                </div>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-dot dot-red"></div>
+                <div class="timeline-content">
+                  <div class="timeline-date">10 Jan 2026</div>
+                  <div class="timeline-title">Battery Replacement</div>
+                  <span class="timeline-status status-pill status-completed">Completed</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
